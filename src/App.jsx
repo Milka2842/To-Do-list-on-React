@@ -52,7 +52,6 @@ function TaskList({ taskList, setTask, timeFilter, completedFilter }) {
   useEffect(() => {
     if (taskList.length >= 0) {
       localStorage.setItem("taskList",JSON.stringify(taskList));
-      console.log("СОхранило", taskList)
     }
   },[taskList]);
 
@@ -61,11 +60,9 @@ function TaskList({ taskList, setTask, timeFilter, completedFilter }) {
   });
   if (completedFilter === "active") {
     sortList = sortList.filter(task => task.completed === false);
-    console.log("активные",sortList)
   };
   if (completedFilter === "completed") {
     sortList = sortList.filter(task => task.completed === true);
-    console.log("выполненные",sortList)
   };
   if (searchQuery !="") {
     sortList = sortList.filter(task => task.title.toLowerCase().includes(searchQuery.toLowerCase()))
