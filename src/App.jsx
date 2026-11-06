@@ -1,5 +1,5 @@
 import {useState , useEffect} from "react";
-import { Routes, Route, NavLink, useParams ,useNavigate , useLocation} from 'react-router-dom'
+import { Routes, Route, NavLink, useParams ,useNavigate } from 'react-router-dom'
 function Header({ taskList, setTask, setCompletedFilter, setTimeFilter, timeFilter, completedFilter }) {
   const [inputTaskValue, setinputTaskValue] = useState("");
   const copyList = taskList;
@@ -44,9 +44,7 @@ function Header({ taskList, setTask, setCompletedFilter, setTimeFilter, timeFilt
 function TaskList({ taskList, deleteTask ,changeStatus, timeFilter, completedFilter }) {
   const [searchQuery , setsearchQuery] = useState("");
   useEffect(() => {
-    if (taskList.length >= 0) {
       localStorage.setItem("taskList",JSON.stringify(taskList));
-    }
   },[taskList]);
 
   let sortList =[...taskList].sort((a,b)=>{
@@ -58,7 +56,7 @@ function TaskList({ taskList, deleteTask ,changeStatus, timeFilter, completedFil
   if (completedFilter === "completed") {
     sortList = sortList.filter(task => task.completed === true);
   };
-  if (searchQuery !="") {
+  if (searchQuery !=="") {
     sortList = sortList.filter(task => task.title.toLowerCase().includes(searchQuery.toLowerCase()))
   };
   const navigate = useNavigate()
@@ -68,7 +66,7 @@ function TaskList({ taskList, deleteTask ,changeStatus, timeFilter, completedFil
       <input type="text" placeholder="Поиск задачи..." id="search" onChange={(e) =>{setsearchQuery(e.target.value);}}></input>
       {sortList.map((i) => (
         <article key={i.id}>
-          <h2 className={i.completed ? "com" : "act"} onClick={() => navigate(`/Task/${i.id}`,{state: i})}>{i.title}</h2>
+          <h2 className={i.completed ? "com" : "act"} onClick={() => navigate(`/task/${i.id}`,{state: i})}>{i.title}</h2>
           <div onClick={() => changeStatus(i.id)}><p>{i.completed ? <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="16" height="16" rx="2" ry="2"></rect><polyline points="6 11 10 15 19 6"></polyline></svg> : <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="16" height="16" rx="2" ry="2"></rect></svg>}</p></div>
           <button onClick={() => deleteTask(i.id)}>Удалить</button>
         </article>
@@ -80,7 +78,7 @@ function TaskList({ taskList, deleteTask ,changeStatus, timeFilter, completedFil
 function AboutPage() {
   return (
     <div>
-      <nav>
+      <nav id="AboutPageNav">
         <NavLink className={({isActive}) => (isActive ? "activeNav": "Nav")} to="/">Главная</NavLink>
         <NavLink className={({isActive}) => (isActive ? "activeNav": "Nav")} to="/about">О приложении</NavLink>
       </nav>
@@ -101,17 +99,34 @@ function Home({taskList ,setTask , setCompletedFilter , setTimeFilter ,timeFilte
   );
 }
 
-function TaskPage({deleteTask , changeStatus}){
+function TaskPage({deleteTask ,taskList , changeStatus}){
   const navigate = useNavigate()
-  const location = useLocation();
-  const i = location.state;
-  console.log(i)
+  const {strid} = useParams();
+  const id = Number(strid);
+  const i = taskList.find(t => t.id === id);
+  if (!i) {
+    return (
+      <>
+        <h2>Задача не найдена</h2>
+        <nav>
+          <NavLink className={({isActive}) => (isActive ? "activeNav": "Nav")} to="/">Главная</NavLink>
+          <NavLink className={({isActive}) => (isActive ? "activeNav": "Nav")} to="/about">О приложении</NavLink>
+        </nav>
+      </>
+    );
+  }
   return(
-    <article key={i.id}>
-      <h2 className={i.completed ? "com" : "act"}>{i.title}</h2>
-      <div onClick={() => {changeStatus(i.id); i.completed = !i.completed} }><p>{i.completed ? <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="16" height="16" rx="2" ry="2"></rect><polyline points="6 11 10 15 19 6"></polyline></svg> : <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="16" height="16" rx="2" ry="2"></rect></svg>}</p></div>
-      <button onClick={() => {deleteTask(i.id); navigate("/")}}>Удалить</button>
-    </article>
+    <div>
+      <nav>
+        <NavLink className={({isActive}) => (isActive ? "activeNav": "Nav")} to="/">Главная</NavLink>
+        <NavLink className={({isActive}) => (isActive ? "activeNav": "Nav")} to="/about">О приложении</NavLink>
+      </nav>
+      <article key={i.id}>
+        <h2 className={i.completed ? "com" : "act"}>{i.title}</h2>
+        <div onClick={() =>changeStatus(i.id) }><p>{i.completed ? <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="16" height="16" rx="2" ry="2"></rect><polyline points="6 11 10 15 19 6"></polyline></svg> : <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="16" height="16" rx="2" ry="2"></rect></svg>}</p></div>
+        <button onClick={() => {deleteTask(i.id); navigate("/")}}>Удалить</button>
+      </article>
+    </div>
   )
 }
 
@@ -144,8 +159,8 @@ export default function App() {
       <Routes>
         <Route path="/" element={<Home deleteTask={deleteTask} changeStatus={changeStatus} taskList={taskList} setTask={setTask} setCompletedFilter = {setCompletedFilter} setTimeFilter={setTimeFilter} timeFilter={timeFilter} completedFilter = {completedFilter}/>} />
         <Route path="/about" element={<AboutPage />} />
-        <Route path="/Task/:id" element={<TaskPage deleteTask={deleteTask} changeStatus={changeStatus}/>} />
-        <Route path="/*" element ={<NotFoundPage/>}/>
+        <Route path="/task/:strid" element={<TaskPage deleteTask={deleteTask} taskList={taskList} changeStatus={changeStatus}/>} />
+        <Route path="*" element ={<NotFoundPage/>}/>
       </Routes>
     </>
   );
