@@ -1,15 +1,16 @@
-import {useState , useEffect} from "react";
+import {useState } from "react";
 import { Routes, Route, NavLink, useParams ,useNavigate } from 'react-router-dom'
-function Header({ taskList, setTask, setCompletedFilter, setTimeFilter, timeFilter, completedFilter }) {
-  const [inputTaskValue, setinputTaskValue] = useState("");
+import { useTasks } from './TaskContext';
+import {UseNav} from "./Nav"
+function Header() {
+  const {taskList, setTask , setCompletedFilter, setTimeFilter, timeFilter, completedFilter} = useTasks();
   const copyList = taskList;
+  const [inputTaskValue, setinputTaskValue] = useState("");
+  const nav = UseNav();
   const count = copyList.filter((task)=> task.completed).length
   return (
     <header>
-      <nav>
-        <NavLink className={({isActive}) => (isActive ? "activeNav": "Nav")} to="/">Главная</NavLink>
-        <NavLink className={({isActive}) => (isActive ? "activeNav": "Nav")} to="/about">О приложении</NavLink>
-      </nav>
+      {nav}
       <div id="addTask">
         <div className="block">
           <label htmlFor="inputTask">Добавте задачу:<input type="text" value={inputTaskValue} id="inputTask" onChange={(e) =>{setinputTaskValue(e.target.value);}} placeholder="Введите название задачи" /> </label>
@@ -41,12 +42,9 @@ function Header({ taskList, setTask, setCompletedFilter, setTimeFilter, timeFilt
   );
 };
 
-function TaskList({ taskList, deleteTask ,changeStatus, timeFilter, completedFilter }) {
+function TaskList({ }) {
   const [searchQuery , setsearchQuery] = useState("");
-  useEffect(() => {
-      localStorage.setItem("taskList",JSON.stringify(taskList));
-  },[taskList]);
-
+  const {taskList ,deleteTask ,changeStatus, timeFilter, completedFilter} = useTasks();
   let sortList =[...taskList].sort((a,b)=>{
     return timeFilter ? b.id - a.id : a.id - b.id ;
   });
@@ -90,19 +88,20 @@ function AboutPage() {
   );
 }
 
-function Home({taskList ,setTask , setCompletedFilter , setTimeFilter ,timeFilter , completedFilter ,deleteTask ,changeStatus}) {
+function Home() {
   return (
     <>
-      <Header taskList={taskList} setTask={setTask} setCompletedFilter = {setCompletedFilter} setTimeFilter={setTimeFilter} timeFilter={timeFilter} completedFilter = {completedFilter}/>
-      <TaskList taskList={taskList} setTask={setTask} timeFilter={timeFilter} completedFilter = {completedFilter} deleteTask={deleteTask} changeStatus={changeStatus}/>
+      <Header/>
+      <TaskList  />
     </>
   );
 }
 
-function TaskPage({deleteTask ,taskList , changeStatus}){
+function TaskPage(){
   const navigate = useNavigate()
   const {strid} = useParams();
   const id = Number(strid);
+  const {deleteTask ,taskList , changeStatus} = useTasks()
   const i = taskList.find(t => t.id === id);
   if (!i) {
     return (
@@ -137,29 +136,12 @@ function NotFoundPage(){
 }
 
 export default function App() {
-  const deleteTask = (id) => {
-    setTask(prev => prev.filter(task => task.id !== id));
-  };
-  const changeStatus = (id) => {
-    setTask(prev => prev.map((task) => {
-      if (task.id === id) {
-        return { ...task, completed: !task.completed };
-      }
-      return task;
-    }));
-  };
-  const [taskList, setTask] = useState(() => {
-      const savedTasks = localStorage.getItem('taskList');
-      return savedTasks ? JSON.parse(savedTasks) : [];
-    });
-  const [timeFilter , setTimeFilter] = useState(true);
-  const [completedFilter , setCompletedFilter] = useState("all");
   return (
     <>
       <Routes>
-        <Route path="/" element={<Home deleteTask={deleteTask} changeStatus={changeStatus} taskList={taskList} setTask={setTask} setCompletedFilter = {setCompletedFilter} setTimeFilter={setTimeFilter} timeFilter={timeFilter} completedFilter = {completedFilter}/>} />
+        <Route path="/" element={<Home/>} />
         <Route path="/about" element={<AboutPage />} />
-        <Route path="/task/:strid" element={<TaskPage deleteTask={deleteTask} taskList={taskList} changeStatus={changeStatus}/>} />
+        <Route path="/task/:strid" element={<TaskPage />} />
         <Route path="*" element ={<NotFoundPage/>}/>
       </Routes>
     </>
